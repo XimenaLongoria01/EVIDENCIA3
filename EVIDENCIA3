@@ -1,0 +1,250 @@
+from ast import While
+from curses.ascii import isspace
+from ast import Break, If, Return
+from configparser import LegacyInterpolation
+from csv import reader
+import random
+from re import T
+from time import sleep
+import datetime
+import re
+import sys 
+import os 
+
+usuario1=[]
+sala1=[]
+turno1=[]
+evento=[]
+fecha1=[]
+diccionario_cambiar={}
+diccionario_notas={}
+sala_registro={}
+diccionario_salas={}
+csv={}
+turno=['Matutino','Vespertino','Nocturno']
+lvacia=[]
+reservacion=[]
+print("==============================================")
+print("========Bienvendo a salas Coworking===========")
+print("==============================================")
+sleep(2)
+while True:
+    print('****************************************************')
+    print("1:RESERVACIONES")
+    print("2:REPORTES")
+    print("3:REGISTRAR UNA SALA")
+    print("4:REGISTRAR UN CLIENTE")
+    print("5:SALIR")
+    print('****************************************************')
+    opcion=int(input("Elija la opcion deseada: "))
+    if opcion == 1:
+        print('**************************************************')
+        print('MENU DE OPCIONES PARA RESERVACIONES')
+        print('1.REGISTRAR UNA NUEVA RESERVACION')
+        print('2.MODIFICAR DESCRIPCIONES DE UNA RESERVACION')
+        print('3.CONSULTAR DISPONIBILIDAD DE SALAS PARA UNA FECHA')
+        print('**********************************************************')
+        opcion_reservacion=int(input('¿QUE OPCION DESEA UTILIZAR? '))
+        print('***********************************************************')
+        if opcion_reservacion==1:
+            reserva =[]
+            print("*******PARA RESERVAR UNA SALA TIENE QUE ESTAR REGISTRADO EL USUARIO*******")
+            nom_registro = input("Ingrese su Nombre: ")
+            if nom_registro in usuario1:
+                num_registro=int(input("Ingrese su numero de registro: "))
+                fecha_str=input("Fecha del evento dd/mm/aaaa: ")
+                fecha= datetime.datetime.strptime(fecha_str,"%d/%m/%Y").date()
+                fecha_actual=datetime.date.today()
+                dia_siguiente= fecha_actual+datetime.timedelta(days=+1)
+                fecha1.append(fecha_str)
+                if fecha<=dia_siguiente:
+                    print(f"!Fecha rechazada, se necesitan dos dias de anticipo!")
+                else:
+                    print('NO SE PUEDE CREAR UNA RESERVACION EN UN APARTADO EXISTENTE')
+                    turnos=["Matutino", "Vespertino","Nocturno"]
+                    print(turnos)
+                    turnos_elegir=input("Ingrese el turno que desea: ")
+                    turno1.append(turnos_elegir)
+                    nom_evento= input("Cual es el nombre de tu evento:")
+                    if sala_registro == None:
+                        print('NO HAY SALAS DISPONIBLES')
+                        continue
+                    else:
+                        print('LAS SALAS DISPONIBLES SON: ')
+                        print(sala_registro)
+                        sala_elegir=int(input('¿Que numeo de sala desea?: '))
+                        sala1.append(sala_elegir)
+                        if fecha_str in fecha1:
+                            if turnos_elegir in turno1:
+                                if sala_elegir in sala1:
+                                    diccionario_notas[fecha_str]=[(sala_elegir),(nom_registro),(nom_evento),(turnos_elegir)]
+                                    diccionario_cambiar[fecha_str]=(nom_evento)
+                                    print(diccionario_notas)
+                                else:
+                                    print('ESTA FECHA Y TURNO NO ESTAN DISPONIBLES EN LA SALA DESEADA, FAVOR DE INTENTAR NUEVAMETE')
+                                    continue
+            else:
+                print("*****************************************************")
+                print("EL USUARIO TIENE QUE ESTAR REGISTRADO")
+                print("*******************************************************")          
+        elif opcion_reservacion==2:
+            print(list(diccionario_cambiar.items()))
+            cambiar=input('Fecha a cambiar en formato (dd/mm/aaaa): ')
+            cambiar = datetime.datetime.strptime(fecha_str, "%d/%m/%Y").date()
+            folio = input("Ingrese  Reservacion: ")
+            if folio == "":
+                print("ERROR, Debe Ingresar Reservacion.")
+                continue
+            if folio not in reserva.keys():
+                print( "No Existe Una Reservacion Con ese Folio")
+                break
+            print("NOMBRE DEL EVENTO\n",reserva[folio][3])
+            while True:
+                nuevo_nombre = input("Ingrese El Nuevo Nombre De Su Evento: ").title()
+                if nuevo_nombre == "":
+                    print("Debe Ingresar Un Nombre Del Evento.")
+                    continue
+                nombre_antiguo = reserva[folio][3]
+                reserva[folio][3] = nuevo_nombre
+                print("Se modifico el nombre del evento.")
+                print(f"Nombre Anterior: {nombre_antiguo}\nNombre Nuevo: {nuevo_nombre}")
+                break
+        elif opcion_reservacion ==3:
+            if not sala:
+                print("No Existe Ninguna Sala.Por Favor Registra Una.")
+                break
+            while True:
+                fecha_consulta = input('¿Qué fecha desea consultar?: ')
+                if fecha_consulta == "":
+                    print("Debe Ingresar una Fecha.")
+                    continue
+                if(not re.match("^[0-9]{2}/[0-9]{2}/[0-9]{4}$",fecha_consulta)):
+                    print("La fecha debe tener el formato(dd/mm/aaaa)")
+                    continue
+                try:
+                    fecha_consulta = datetime.datetime.strptime(fecha_consulta,"%d/%m/%Y").date()
+                except:
+                    print("La Fecha Ingresada No es una Fecha Valida, Intente De Nuevo.")
+                    continue
+                lista_encontrados = []
+                reservaciones_posibles = []
+                for clave,datos in reserva.items():
+                    sala, fecha, turno = (datos[2], datos[0][0], datos[0][1])
+                    if fecha == fecha_consulta:
+                        lista_encontrados.append((sala, turno))
+                    reservas_encontradas = set(lista_encontrados)
+                    for sala in sala.keys():
+                        for turno in turnos_elegir.values():
+                            reservaciones_posibles.append((sala,turno))
+                    combinaciones_reservas_posibles = set((reservaciones_posibles))
+
+                    salas_turnos_posibles = set((combinaciones_reservas_posibles - reservas_encontradas))
+                    print(f"Las salas disponibles {fecha_consulta.strftime('%d/%m/%Y')}  \n")
+                    print('ID SALA   TURNO')
+                    for sala in salas_turnos_posibles:
+                        print(f'{sala}')
+                    break 
+        elif opcion_reservacion == 4:
+            print("Saliendo........")
+            break 
+    elif opcion == 2:
+        print('*********************************')
+        print('MENU DE OPCIONES PARA EL REPORTE')
+        print('1.REPORTE EN PANTALLA PARA RESERVACIONES DE UNA FECHA')
+        print('2.EXPORTAR REPORTE TABULAR EN EXCEL')
+        print("*************************************")
+        opcion_reporte=int(input('¿Cual es la opcion que deseas elegir? '))
+        print('*******************************************')
+        if opcion_reporte==1:
+            fecha_reporte=input("Fecha a verificiar en formato (dd/mm/aaaa): ")
+            fecha = datetime.datetime.strptime(fecha_str, "%d/%m/%Y").date()
+            if fecha_reporte in diccionario_notas:
+                print("*****************************************************************")
+                print("Reporte de reservaciones para para el dia",fecha_reporte)
+                print("*****************************************************************")
+                print( " SALA     CLIENTE           EVENTO                  TURNO       ")
+                print("*****************************************************************")
+                print(diccionario_notas.get(fecha_reporte))
+                print("******************************************************************")
+            else:
+                print("NO HAY RESERVACIONES PARA ESE DIA" )
+        if opcion_reporte==2:
+            print("EXPORTAR REPORTE TABULAR EN EXCEL")
+            print("EXPORTAR REPORTE TABULAR EN EXCEL")
+            fecha_reporte=input("Fecha a verificiar en formato (dd/mm/aaaa): ")
+            fecha = datetime.datetime.strptime(fecha_str, "%d/%m/%Y").date()
+            if fecha_reporte in diccionario_notas:
+              libro = openpyxl.Workbook()
+              hoja = libro["Sheet"]
+              hoja.title = "Registro"
+              hoja["A1"].value = "Salas"
+              hoja["A2"].value=(sala_elegir)
+              hoja["B1"].value="Cliente"
+              hoja["B2"].value=(nom_registro)
+              hoja["C1"].value="Evento"
+              hoja["C2"].value=(nom_evento)
+              hoja["D1"].value="Turno"
+              hoja["D2"].value=(turnos_elegir)
+              libro.save("MiExcelDesdePython.xlsx")
+            else:
+              print("NO HAY RESERVACIONES PARA ESE DIA")
+    elif opcion == 3:
+        import random
+        cupo=[]
+        clave_unica={}
+        num_sala=int(input("Coloque el numero de la sala: "))
+        nombre_sala=input("Cual es el nombre de tu sala?: ")
+        sala_registro[(num_sala)]=(nombre_sala)
+        cupo1=int(input("De cuanto es el cupo de tu sala?: "))
+        cupo.append(cupo1)
+        print("La clave unica de la sala es: ", max(clave_unica.keys(),default=0)+1)
+        print(sala_registro)
+        for sala in range(0,3): 
+            lvacia.append(num_sala)
+            lvacia.append(nombre_sala)
+            lvacia.append(turno[sala])
+        print(lvacia)
+    elif opcion == 4:
+      import random
+      clave=[]
+      nombre=input(f"Coloque su nombre de usuario: ") 
+      clave_unica=(print(f"La clave unica del cliente es: {random.randrange(20)}"))
+      usuario1.append(nombre)
+      clave.append(clave_unica)
+    elif opcion ==5:
+        import csv
+        datos_grabar=(diccionario_notas)
+        with open("Reporte.csv","w", newline="") as archivo:
+            grabador=csv.writer(archivo)
+            grabador.writerow(('FECHA','SALA','NOMUSUARIO','NOMEVENTO','TURNO'))
+            grabador.writerows([(clave, datos[0], datos[1], datos[2], datos[3]) for clave, datos in datos_grabar.items()])
+            print('ARCHIVO CSV CREADO CORRECTAMENTE')
+            import sys
+            import sqlite3
+            from sqlite3 import Error
+            try:
+              with sqlite3.connect("Salasco.db") as conn:
+                mi_cursor = conn.cursor()
+                mi_cursor.execute("CREATE TABLE IF NOT EXISTS salas (clave INTEGER PRIMARY KEY, nombre TEXT NOT NULL);")
+                print("Tabla creada exitosamente")
+            except Error as e:
+                print(e)
+            except:
+                print(f"Se produjo el siguiente error: {sys.exc_info()[0]}")
+            try:
+              with sqlite3.connect("SalasCo.db") as conn:
+                mi_cursor = conn.cursor() 
+                mi_cursor.execute("INSERT INTO proyecto VALUES(1,'FECHA')")
+                mi_cursor.execute("INSERT INTO proyecto VALUES(2,'SALA')")
+                mi_cursor.execute("INSERT INTO proyecto VALUES(3,'USUARIO')")
+                mi_cursor.execute("INSERT INTO proyecto VALUES(4,'EVENTO')")
+                mi_cursor.execute("INSERT INTO proyecto VALUES(5,'TURNO')")
+                print("Registro agregado exitosamente")
+            except Error as e:
+                print(e)
+            except:
+                print(f"Se produjo el siguiente error: {sys.exc_info()[0]}")
+            finally:
+                if (conn):
+                  conn.close()
+          
